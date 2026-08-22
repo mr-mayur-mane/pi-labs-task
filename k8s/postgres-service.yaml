@@ -4,7 +4,7 @@ metadata:
   name: postgres
   namespace: task-app
 spec:
-  clusterIP: None
+  type: ClusterIP
   selector:
     app: postgres
   ports:
