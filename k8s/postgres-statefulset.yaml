@@ -48,6 +48,7 @@ spec:
     spec:
       accessModes: 
         - ReadWriteOnce
+      storageClassName: task-storage
       resources:
         requests:
           storage: 1Gi
