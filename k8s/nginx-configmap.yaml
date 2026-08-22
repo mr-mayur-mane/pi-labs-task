@@ -8,19 +8,65 @@ data:
     server {
         listen 80;
 
+        # Welcome page
+        location = / {
+            default_type text/html;
+
+            return 200 '<html>
+            <head>
+                <title>Task Management Application</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        text-align: center;
+                        margin-top: 100px;
+                    }
+
+                    h1 {
+                        color: #333;
+                    }
+
+                    a {
+                        display: inline-block;
+                        margin: 10px;
+                        padding: 12px 20px;
+                        text-decoration: none;
+                        background: #007bff;
+                        color: white;
+                        border-radius: 5px;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <h1>Welcome to Task Management Application</h1>
+
+                <p>Select an option:</p>
+
+                <a href="/app/">Open Application</a>
+
+                <a href="/api/tasks">View Tasks API</a>
+            </body>
+            </html>';
+        }
+
+        # Frontend
         location /app/ {
             proxy_pass http://frontend:80/;
+
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
         }
 
+        # Backend API
         location /api/ {
-            proxy_pass http://backend:5000/api/;
+            proxy_pass http://backend:5000;
+
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
-        }
-
-        location / {
-            return 404;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
         }
     }
