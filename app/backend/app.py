@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 import os
+import time
 import psycopg2
 
 app = Flask(__name__)
@@ -22,23 +23,42 @@ def get_connection():
 
 
 def initialize_database():
-    connection = get_connection()
-    cursor = connection.cursor()
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS tasks (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(255) NOT NULL
-        )
-    """)
+    for attempt in range(10):
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        try:
+            connection = get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tasks (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL
+                )
+            """)
+
+            connection.commit()
+
+            cursor.close()
+            connection.close()
+
+            print("Database initialized successfully")
+
+            return
+
+        except psycopg2.OperationalError as error:
+
+            print(f"Database connection failed. Retry {attempt + 1}/10")
+            print(error)
+
+            time.sleep(5)
+
+    raise Exception("Unable to connect to PostgreSQL")
 
 
-@app.route("/api")
+@app.route("/api/")
 def api_home():
+
     return jsonify({
         "message": "Task API is running"
     })
@@ -50,7 +70,9 @@ def get_tasks():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute("SELECT id, name FROM tasks ORDER BY id")
+    cursor.execute(
+        "SELECT id, name FROM tasks ORDER BY id"
+    )
 
     tasks = cursor.fetchall()
 
@@ -74,6 +96,7 @@ def create_task():
     task_name = data.get("name")
 
     if not task_name:
+
         return jsonify({
             "error": "Task name is required"
         }), 400
@@ -97,6 +120,40 @@ def create_task():
         "id": task_id,
         "name": task_name
     }), 201
+
+
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+def delete_task(task_id):
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "DELETE FROM tasks WHERE id = %s RETURNING id, name",
+        (task_id,)
+    )
+
+    deleted_task = cursor.fetchone()
+
+    if not deleted_task:
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "error": "Task not found"
+        }), 404
+
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({
+        "message": "Task deleted successfully",
+        "id": deleted_task[0],
+        "name": deleted_task[1]
+    }), 200
 
 
 if __name__ == "__main__":
