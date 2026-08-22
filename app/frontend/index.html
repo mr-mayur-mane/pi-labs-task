@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Task Management</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        input {
+            padding: 10px;
+            width: 300px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Task Management Application</h1>
+
+    <input
+        id="taskInput"
+        type="text"
+        placeholder="Enter a task"
+    >
+
+    <button onclick="addTask()">
+        Add Task
+    </button>
+
+    <h2>Tasks</h2>
+
+    <ul id="taskList"></ul>
+
+    <script>
+
+        async function loadTasks() {
+
+            const response = await fetch("/api/tasks");
+
+            const tasks = await response.json();
+
+            const list = document.getElementById("taskList");
+
+            list.innerHTML = "";
+
+            tasks.forEach(task => {
+
+                const li = document.createElement("li");
+
+                li.textContent =
+                    task.id + ". " + task.name;
+
+                list.appendChild(li);
+
+            });
+        }
+
+
+        async function addTask() {
+
+            const input =
+                document.getElementById("taskInput");
+
+            const taskName = input.value;
+
+            if (!taskName) {
+                return;
+            }
+
+            await fetch("/api/tasks", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    name: taskName
+                })
+            });
+
+            input.value = "";
+
+            loadTasks();
+        }
+
+
+        loadTasks();
+
+    </script>
+
+</body>
+
+</html>
