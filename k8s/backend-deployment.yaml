@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: task-backend:1.0
+        image: task-backend:1.1
         imagePullPolicy: IfNotPresent
         resources:
           limits:
