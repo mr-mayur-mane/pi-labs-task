@@ -16,9 +16,9 @@ A simple Task Management application deployed on a single-node Kubernetes cluste
   - [4. Deploy Kubernetes Resources](#4-deploy-kubernetes-resources)
   - [5. Verify Deployment](#5-verify-deployment)
 - [Persistent Storage](#persistent-storage)
-- [Validating Data Persistence](#validating-data-persistence)
 - [NGINX Reverse Proxy](#nginx-reverse-proxy)
 - [Path-Based Routing](#path-based-routing)
+- [Validating Data Persistence](#validating-data-persistence)
 - [What This Project Demonstrates](#what-this-project-demonstrates)
 
 ## Overview
@@ -307,43 +307,6 @@ volumeClaimTemplates:
 
 The PVC is mounted inside PostgreSQL at `/var/lib/postgresql/data`.
 
-## Validating Data Persistence
-
-Create a task:
-
-```powershell
-Invoke-RestMethod `
-  -Uri "http://127.0.0.1:<PORT>/api/tasks" `
-  -Method Post `
-  -ContentType "application/json" `
-  -Body '{"name":"Persistent Task"}'
-```
-
-Verify the task exists:
-
-```powershell
-Invoke-RestMethod -Uri "http://127.0.0.1:<PORT>/api/tasks" -Method Get
-```
-
-Delete the PostgreSQL pod:
-
-```bash
-kubectl delete pod postgres-0 -n task-app
-```
-
-Wait for it to be recreated:
-
-```bash
-kubectl get pods -n task-app -w
-```
-
-Once `postgres-0` is running again, verify the task again:
-
-```powershell
-Invoke-RestMethod -Uri "http://127.0.0.1:<PORT>/api/tasks" -Method Get
-```
-
-The previously created task should still exist — confirming PostgreSQL data is stored on persistent storage rather than in the pod filesystem.
 
 ## NGINX Reverse Proxy
 
@@ -391,6 +354,43 @@ Invoke-RestMethod `
 ```powershell
 Invoke-RestMethod -Uri "http://127.0.0.1:<PORT>/api/tasks/1" -Method Delete
 ```
+## Validating Data Persistence
+
+Create a task:
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:<PORT>/api/tasks" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"name":"Persistent Task"}'
+```
+
+Verify the task exists:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:<PORT>/api/tasks" -Method Get
+```
+
+Delete the PostgreSQL pod:
+
+```bash
+kubectl delete pod postgres-0 -n task-app
+```
+
+Wait for it to be recreated:
+
+```bash
+kubectl get pods -n task-app -w
+```
+
+Once `postgres-0` is running again, verify the task again:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:<PORT>/api/tasks" -Method Get
+```
+
+The previously created task should still exist — confirming PostgreSQL data is stored on persistent storage rather than in the pod filesystem.
 
 ## What This Project Demonstrates
 
