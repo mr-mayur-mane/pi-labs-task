@@ -82,9 +82,6 @@ NGINX (NodePort)
 
 All resources are deployed into the `task-app` namespace:
 
-```bash
-kubectl apply -f k8s/namespace.yaml
-```
 
 ## Project Structure
 
